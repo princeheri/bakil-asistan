@@ -169,4 +169,5 @@ if user_input:
         except Exception as e:
             message_placeholder.error(f"Hata: {e}")
 
-st.markdown('<div class="alt-imza">DESIGNED BY HANİF TOPRAK</div>', unsafe_allow_html=True
+st.markdown('<div class="alt-imza">DESIGNED BY HANİF TOPRAK</div>', unsafe_allow_html=True)
+        
