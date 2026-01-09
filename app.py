@@ -11,32 +11,11 @@ from langdetect import detect
 SIFRE = "AIzaSyBVPm17FHeyGFqu_dUuWcz6oXwdb-3sOq4"
 genai.configure(api_key=SIFRE)
 
-# --- MODELİ OTOMATİK BULMA (AKILLI SEÇİM) ---
-def en_iyi_modeli_bul():
-    """Hesabın için çalışan en iyi modeli otomatik bulur."""
-    try:
-        # Google'daki modelleri listele
-        modeller = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        
-        # Öncelik sırasına göre dene
-        if 'models/gemini-1.5-flash' in modeller:
-            return 'gemini-1.5-flash'
-        elif 'models/gemini-pro' in modeller:
-            return 'gemini-pro'
-        elif 'models/gemini-1.5-pro' in modeller:
-            return 'gemini-1.5-pro'
-        else:
-            # Listede bulamazsa varsayılanı döndür
-            return 'gemini-1.5-flash'
-    except Exception as e:
-        # Hata olursa varsayılanı kullan
-        return 'gemini-1.5-flash'
+# --- MODEL AYARI (Gemini 1.5 Flash) ---
+# Bu model en hızlı ve ücretsiz planda en sorunsuz çalışan modeldir.
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Seçilen modeli belirle
-secilen_model = en_iyi_modeli_bul()
-model = genai.GenerativeModel(secilen_model)
-
-# --- YAPAY ZEKANIN KİMLİĞİ ---
+# --- GİZLİ KİMLİK ---
 GIZLI_KIMLIK = """
 Senin adın Bakıl. 
 Sen Kürtçe ve Türkçe bilen, çok zeki, yardımsever ve Kürdistanlı bir asistansın.
@@ -48,7 +27,7 @@ Cevapların kısa, net ve samimi olsun.
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Bakıl AI", page_icon="🦁", layout="centered", initial_sidebar_state="collapsed")
 
-# --- CSS TASARIM (HATASIZ VE SOLA YAPIŞIK) ---
+# --- CSS TASARIM ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
@@ -115,10 +94,9 @@ def konus(metin):
             algilanan_dil = detect(metin)
         except:
             algilanan_dil = 'tr'
-            
+        
+        # Basit dil seçimi
         dil_kodu = 'tr' 
-        if algilanan_dil == 'ku':
-            dil_kodu = 'tr' 
         
         tts = gTTS(text=metin, lang=dil_kodu, slow=False)
         fp = io.BytesIO()
@@ -139,7 +117,7 @@ def sesi_yaziya_cevir(audio_bytes):
 
 # --- ARAYÜZ ---
 st.markdown('<div class="baslik">BAKIL</div>', unsafe_allow_html=True)
-st.caption(f"🚀 Sesli Asistan (Model: {secilen_model})")
+st.caption("🚀 Sesli ve Zeki Asistan")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
