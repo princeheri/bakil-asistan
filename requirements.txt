@@ -1,2 +1,6 @@
 streamlit
 google-generativeai
+gtts
+SpeechRecognition
+streamlit-mic-recorder
+langdetect
