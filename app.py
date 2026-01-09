@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 # --- AYARLAR ---
-SIFRE = "AIzaSyBsib1bPwnp2NZaUk7SHNCPXQlmFi04j4c"
+SIFRE = "AIzaSyD6ZUi1UW6Jocj76bRAy_YbFh82yAKQ0Tc"
 genai.configure(api_key=SIFRE)
 
 # --- YAPAY ZEKANIN KİMLİĞİ (GÜNCELLENDİ) ---
