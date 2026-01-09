@@ -6,25 +6,29 @@ import speech_recognition as sr
 from streamlit_mic_recorder import mic_recorder
 from langdetect import detect
 
-# --- AYARLAR (SENİN GÖNDERDİĞİN ŞİFRE EKLENDİ) ---
+# --- AYARLAR ---
+# Senin API Anahtarın
 SIFRE = "AIzaSyBVPm17FHeyGFqu_dUuWcz6oXwdb-3sOq4"
 genai.configure(api_key=SIFRE)
 
+# --- MODEL SEÇİMİ (GARANTİ MODEL: GEMINI-PRO) ---
+# 'gemini-pro' en standart modeldir, hata vermez.
+model = genai.GenerativeModel('gemini-pro')
+
 # --- YAPAY ZEKANIN KİMLİĞİ ---
-gizli_talimat = """
-Navê te Bakıl e.
-Tu asîstanekî zîrek, alîkar û Kurdîaxêv î.
-Pêşdebirê te: HANİF TOPRAK.
-Heke yek ji te bipirse "Tu xelkê ku derê yî?", cewaba te teqez ev be: "Ez ji Kurdistanê me".
-Zimanê te yê sereke Kurdî ye, lê tu dikarî bi Tirkî jî biaxivî.
-Cevapların kısa, öz ve net olsun.
+# Bu talimatı her mesajın başına gizlice ekleyeceğiz.
+GIZLI_KIMLIK = """
+Senin adın Bakıl. 
+Sen Kürtçe ve Türkçe bilen, çok zeki, yardımsever ve Kürdistanlı bir asistansın.
+Geliştiricin: HANİF TOPRAK.
+Eğer biri sana "Nerelisin?" derse kesinlikle "Kürdistanlıyım" de.
+Cevapların kısa, net ve samimi olsun.
 """
-model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=gizli_talimat)
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Bakıl AI", page_icon="🦁", layout="centered", initial_sidebar_state="collapsed")
 
-# --- CSS TASARIM (HATA VERMEMESİ İÇİN SOLA YAPIŞIK) ---
+# --- CSS TASARIM (HATA VERMEYEN DÜZ VERSİYON) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
@@ -76,7 +80,6 @@ header, footer, #MainMenu {visibility: hidden;}
     border: 1px solid rgba(255,255,255,0.1); 
 }
 
-/* Mikrofon butonu ortalama */
 div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stMarkdownContainer"] > p:contains("🎙️")) {
     display: flex; 
     justify-content: center; 
@@ -120,6 +123,7 @@ st.caption("🚀 Sesli ve Zeki Asistan")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+    # Geçmişe sadece görünen mesajı ekliyoruz
     baslangic_mesaji = "Silav! Ez Bakıl im. Tu dikarî binivîsî an jî bi min re biaxivî. 🎙️"
     st.session_state.messages.append({"role": "assistant", "content": baslangic_mesaji})
 
@@ -151,7 +155,10 @@ if user_input:
         message_placeholder = st.empty()
         message_placeholder.markdown("Thinking...")
         try:
-            response = model.generate_content(user_input)
+            # Gizli kimliği ve kullanıcı mesajını birleştirip gönderiyoruz
+            tam_prompt = GIZLI_KIMLIK + "\n\nKullanıcı dedi ki: " + user_input
+            
+            response = model.generate_content(tam_prompt)
             cevap_metni = response.text
             
             message_placeholder.markdown(cevap_metni)
