@@ -11,12 +11,32 @@ from langdetect import detect
 SIFRE = "AIzaSyBVPm17FHeyGFqu_dUuWcz6oXwdb-3sOq4"
 genai.configure(api_key=SIFRE)
 
-# --- MODEL SEÇİMİ (GARANTİ MODEL: GEMINI-PRO) ---
-# 'gemini-pro' en standart modeldir, hata vermez.
-model = genai.GenerativeModel('gemini-pro')
+# --- MODELİ OTOMATİK BULMA (AKILLI SEÇİM) ---
+def en_iyi_modeli_bul():
+    """Hesabın için çalışan en iyi modeli otomatik bulur."""
+    try:
+        # Google'daki modelleri listele
+        modeller = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
+        # Öncelik sırasına göre dene
+        if 'models/gemini-1.5-flash' in modeller:
+            return 'gemini-1.5-flash'
+        elif 'models/gemini-pro' in modeller:
+            return 'gemini-pro'
+        elif 'models/gemini-1.5-pro' in modeller:
+            return 'gemini-1.5-pro'
+        else:
+            # Listede bulamazsa varsayılanı döndür
+            return 'gemini-1.5-flash'
+    except Exception as e:
+        # Hata olursa varsayılanı kullan
+        return 'gemini-1.5-flash'
+
+# Seçilen modeli belirle
+secilen_model = en_iyi_modeli_bul()
+model = genai.GenerativeModel(secilen_model)
 
 # --- YAPAY ZEKANIN KİMLİĞİ ---
-# Bu talimatı her mesajın başına gizlice ekleyeceğiz.
 GIZLI_KIMLIK = """
 Senin adın Bakıl. 
 Sen Kürtçe ve Türkçe bilen, çok zeki, yardımsever ve Kürdistanlı bir asistansın.
@@ -28,61 +48,61 @@ Cevapların kısa, net ve samimi olsun.
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Bakıl AI", page_icon="🦁", layout="centered", initial_sidebar_state="collapsed")
 
-# --- CSS TASARIM (HATA VERMEYEN DÜZ VERSİYON) ---
+# --- CSS TASARIM (HATASIZ VE SOLA YAPIŞIK) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
 
 @keyframes gradient { 
-    0% {background-position: 0% 50%;} 
-    50% {background-position: 100% 50%;} 
-    100% {background-position: 0% 50%;} 
+0% {background-position: 0% 50%;} 
+50% {background-position: 100% 50%;} 
+100% {background-position: 0% 50%;} 
 }
 
 .stApp { 
-    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e); 
-    background-size: 400% 400%; 
-    animation: gradient 15s ease infinite; 
-    font-family: 'Montserrat', sans-serif; 
-    color: white; 
+background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e); 
+background-size: 400% 400%; 
+animation: gradient 15s ease infinite; 
+font-family: 'Montserrat', sans-serif; 
+color: white; 
 }
 
 header, footer, #MainMenu {visibility: hidden;}
 
 .baslik { 
-    font-size: 50px; 
-    font-weight: 600; 
-    text-align: center; 
-    background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); 
-    -webkit-background-clip: text; 
-    -webkit-text-fill-color: transparent; 
-    margin-bottom: 10px; 
-    text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.3); 
+font-size: 50px; 
+font-weight: 600; 
+text-align: center; 
+background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); 
+-webkit-background-clip: text; 
+-webkit-text-fill-color: transparent; 
+margin-bottom: 10px; 
+text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.3); 
 }
 
 .alt-imza { 
-    position: fixed; 
-    bottom: 10px; 
-    left: 0; 
-    width: 100%; 
-    text-align: center; 
-    font-size: 10px; 
-    color: rgba(255,255,255,0.3); 
-    letter-spacing: 3px; 
-    z-index: 99; 
-    pointer-events: none; 
+position: fixed; 
+bottom: 10px; 
+left: 0; 
+width: 100%; 
+text-align: center; 
+font-size: 10px; 
+color: rgba(255,255,255,0.3); 
+letter-spacing: 3px; 
+z-index: 99; 
+pointer-events: none; 
 }
 
 .stChatMessage { 
-    background: rgba(255, 255, 255, 0.05); 
-    border-radius: 15px; 
-    margin-bottom: 10px; 
-    border: 1px solid rgba(255,255,255,0.1); 
+background: rgba(255, 255, 255, 0.05); 
+border-radius: 15px; 
+margin-bottom: 10px; 
+border: 1px solid rgba(255,255,255,0.1); 
 }
 
 div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stMarkdownContainer"] > p:contains("🎙️")) {
-    display: flex; 
-    justify-content: center; 
+display: flex; 
+justify-content: center; 
 }
 </style>
 """, unsafe_allow_html=True)
@@ -119,11 +139,10 @@ def sesi_yaziya_cevir(audio_bytes):
 
 # --- ARAYÜZ ---
 st.markdown('<div class="baslik">BAKIL</div>', unsafe_allow_html=True)
-st.caption("🚀 Sesli ve Zeki Asistan")
+st.caption(f"🚀 Sesli Asistan (Model: {secilen_model})")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-    # Geçmişe sadece görünen mesajı ekliyoruz
     baslangic_mesaji = "Silav! Ez Bakıl im. Tu dikarî binivîsî an jî bi min re biaxivî. 🎙️"
     st.session_state.messages.append({"role": "assistant", "content": baslangic_mesaji})
 
@@ -155,7 +174,6 @@ if user_input:
         message_placeholder = st.empty()
         message_placeholder.markdown("Thinking...")
         try:
-            # Gizli kimliği ve kullanıcı mesajını birleştirip gönderiyoruz
             tam_prompt = GIZLI_KIMLIK + "\n\nKullanıcı dedi ki: " + user_input
             
             response = model.generate_content(tam_prompt)
@@ -170,4 +188,3 @@ if user_input:
             message_placeholder.error(f"Hata: {e}")
 
 st.markdown('<div class="alt-imza">DESIGNED BY HANİF TOPRAK</div>', unsafe_allow_html=True)
-        
